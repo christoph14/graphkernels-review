@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
     param_grid = {
         'WL': [0, 1, 2, 3, 4, 5, 6, 7],   # $h$ = number of iterations
-        'GL': [3, 4, 5],                  # $k$ = size of graphlet
+        'GL': [3, 4],                     # $k$ = size of graphlet
         'VVEH': 10.0 * np.arange(-2, 3),  # $l$ = regularisation term
     }
 
