@@ -327,7 +327,7 @@ if __name__ == '__main__':
         '-I', '--max-iterations',
         type=int,
         help='Maximum number of iterations to use for training',
-        default=1e5
+        default=int(1e5)
     )
 
     args = parser.parse_args()
