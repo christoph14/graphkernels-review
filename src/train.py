@@ -138,7 +138,7 @@ def grid_search_cv(
             # be understood *relative* to the input training indices.
             for train_index, test_index in cv.split(train_indices, y):
 
-                accuracy, params = _fit_and_score(
+                result = _fit_and_score(
                     clone(clf),
                     K, y,
                     scorer=make_scorer(accuracy_score),
@@ -149,6 +149,8 @@ def grid_search_cv(
                     fit_params=None,  # No additional parameters for `fit()`
                     return_parameters=True,
                 )
+                accuracy = result['test_scores']
+                params = result['parameters']
                 accuracy_list.append(accuracy)
 
             # compute accuracy mean of current parameters to compare to
