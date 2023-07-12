@@ -151,7 +151,7 @@ if __name__ == '__main__':
         std = df_local.std(axis=1)
 
         # Replace everything that is not a mean
-        df_local[name] = f'{mean.values[0]:2.2f} +- {std.values[0]:2.2f}'
+        df_local[name] = [f'{m:2.2f} +- {s:2.2f}' for (m, s) in zip(mean.values, std.values)]
         df_local = df_local[[name]]
 
         if df is None:
