@@ -1,7 +1,9 @@
 __pycache__/
 
-raw/
+venv/
+.idea/
 
-*~
-*.swp
-/results
+data/
+matrices/
+results/
+evaluation/
