@@ -15,7 +15,7 @@ import warnings
 import numpy as np
 
 from sklearn.base import clone
-from sklearn.exceptions import UndefinedMetricWarning
+from sklearn.exceptions import UndefinedMetricWarning, ConvergenceWarning
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import precision_score
@@ -138,17 +138,19 @@ def grid_search_cv(
             # be understood *relative* to the input training indices.
             for train_index, test_index in cv.split(train_indices, y):
 
-                result = _fit_and_score(
-                    clone(clf),
-                    K, y,
-                    scorer=make_scorer(accuracy_score),
-                    train=train_index,
-                    test=test_index,
-                    verbose=0,
-                    parameters=clf_parameters,
-                    fit_params=None,  # No additional parameters for `fit()`
-                    return_parameters=True,
-                )
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", category=ConvergenceWarning)
+                    result = _fit_and_score(
+                        clone(clf),
+                        K, y,
+                        scorer=make_scorer(accuracy_score),
+                        train=train_index,
+                        test=test_index,
+                        verbose=0,
+                        parameters=clf_parameters,
+                        fit_params=None,  # No additional parameters for `fit()`
+                        return_parameters=True,
+                    )
                 accuracy = result['test_scores']
                 params = result['parameters']
                 accuracy_list.append(accuracy)
