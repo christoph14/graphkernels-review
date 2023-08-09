@@ -76,13 +76,11 @@ def gk_function(algorithm, graphs, par):
     return(gk)
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
             'FILE', 
-            nargs="+", 
-            type=str, 
+            type=str,
             help="Input file(s)"
         )
 
@@ -114,11 +112,9 @@ if __name__ == "__main__":
         )
 
     args = parser.parse_args()
+    input_files = [f"{path}/{file}" for file in os.listdir(args.FILE) if file.endswith('.pickle')]
 
-    logging.basicConfig(
-            level=logging.INFO,
-            format=None
-        )
+    logging.basicConfig(level=logging.INFO, format=None)
 
     logging.info('Loading graphs...')
 
@@ -126,7 +122,7 @@ if __name__ == "__main__":
         logging.info("Choosing at most 100 graphs at random for timing")
 
         random.seed(42)
-        args.FILE = random.sample(args.FILE, 100)
+        input_files = random.sample(input_files, 100)
 
     graph_attributes = {
         "SP_gkl": {"vertex": "label", "edge": []},
@@ -137,18 +133,24 @@ if __name__ == "__main__":
         "GH_gkl": {"vertex": [], "edge": []},  # TODO fix
     }
 
+    graphs = [ig.read(filename, format='picklez') for filename in tqdm(input_files, desc='File')]
 
-    graphs = [
-            ig.read(filename, format='picklez') for filename in
-            tqdm(args.FILE, desc='File')
-            ]
+    # Sample graphs
+    dataset = args.output.split('/')[-1]
+    n_graphs = {
+        'BZR': 405,
+        'MUTAG': 188,
+        'PTC_MR': 344,
+        'KKI': 83,
+        'ENZYMES': 300,
+        'PROTEINS': 200,
+        'AIDS': 500,
+    }
+    if n_graphs[dataset] < len(graphs):
+        rng = np.random.default_rng(403371)
+        graphs = rng.choice(graphs, n_graphs[dataset], replace=False)
 
-    # sample graphs when testing code changes for expediency 
-    #graphs = [graphs[i] for i in list(np.arange(1, 150, 10))]
-    
-    graphs = [
-            preprocess(graph) for graph in tqdm(graphs, desc="Preprocessing")
-            ]
+    graphs = [preprocess(graph) for graph in tqdm(graphs, desc="Preprocessing")]
     
     # check if the graph has edge labels, and if not, relabel edges
     if 'label' not in graphs[0].es.attributes():
