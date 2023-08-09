@@ -15,7 +15,7 @@ import traceback
 
 import grakel
 from grakel.kernels import ShortestPath, WeisfeilerLehman, VertexHistogram
-from grakel.kernels import EdgeHistogram, RandomWalkLabeled, SubgraphMatching
+from grakel.kernels import EdgeHistogram, RandomWalkLabeled, GraphHopper
 import igraph as ig
 import numpy as np
 
@@ -71,6 +71,8 @@ def gk_function(algorithm, graphs, par):
                 ke=lambda p1, p2: ke_kernel(p1, p2, c), # inline lambda 
                 kv=kv_kernel
                 ).fit_transform(graphs) 
+    elif algorithm == "GH_gkl":
+        gk = GraphHopper().fit_transform(graphs)
     return(gk)
 
 
@@ -127,13 +129,13 @@ if __name__ == "__main__":
         args.FILE = random.sample(args.FILE, 100)
 
     graph_attributes = {
-            "SP_gkl": {"vertex": "label", "edge": []},
-            "EH_gkl": {"vertex": [], "edge": "label"},
-            "RW_gkl": {"vertex": "label", "edge": []},
-            "WL_gkl": {"vertex": "label", "edge": []},
-            "RW_gkl": {"vertex": "label", "edge": []},
-            "CSM_gkl": {"vertex": "both", "edge": "both"}
-            }
+        "SP_gkl": {"vertex": "label", "edge": []},
+        "EH_gkl": {"vertex": [], "edge": "label"},
+        "RW_gkl": {"vertex": "label", "edge": []},
+        "WL_gkl": {"vertex": "label", "edge": []},
+        "CSM_gkl": {"vertex": "both", "edge": "both"},
+        "GH_gkl": {"vertex": [], "edge": []},  # TODO fix
+    }
 
 
     graphs = [
@@ -157,30 +159,27 @@ if __name__ == "__main__":
     graphs, y = igraph_to_grakel(graphs, attr=graph_attributes[args.algorithm[0]])
 
     param_grid = {
-            "SP_gkl": [1],
-            "WL_gkl": [1, 2, 3, 4, 5, 6, 7], # 0 returns an error
-            "RW_gkl":  [(l,p) for l in 
-                [0.001] 
-                for p in [2, 3, 4, 5, 6, 7, None]],
-            "CSM_gkl": [(c,k) for c in 
-                [0.1, 0.5, 1.0] 
-                for k in [3, 4, 5]],
-            }
+        "SP_gkl": [1],
+        "WL_gkl": [1, 2, 3, 4, 5, 6, 7],  # 0 returns an error
+        "RW_gkl":  [(l, p) for l in [0.001] for p in [2, 3, 4, 5, 6, 7, None]],
+        "CSM_gkl": [(c, k) for c in [0.1, 0.5, 1.0] for k in [3, 4, 5]],
+    }
 
     algorithms = {
-            "SP_gkl": "Notused", # legacy item, I need a value 
-            "EH_gkl": "Notused", # legacy item, I need a value 
-            "WL_gkl": "Notused", # legacy item, I need a value 
-            "RW_gkl": "Notused", # legacy item, I need a value 
-            "CSM_gkl": "Notused", # legacy item, I need a value 
-            }
+        "SP_gkl": "Notused",  # legacy item, I need a value
+        "EH_gkl": "Notused",  # legacy item, I need a value
+        "WL_gkl": "Notused",  # legacy item, I need a value
+        "RW_gkl": "Notused",  # legacy item, I need a value
+        "CSM_gkl": "Notused",  # legacy item, I need a value
+        "MP_gkl": "Not used",
+        "GH_gkl": "Not used",
+    }
 
     # Remove algorithms that have not been specified by the user; this
     # makes it possible to run only a subset of all configurations.
     algorithms = {
-            k: v for k, v in algorithms.items() if k in args.algorithm
-            }
-    
+        k: v for k, v in algorithms.items() if k in args.algorithm
+    }
 
     os.makedirs(args.output, exist_ok=True)
 
@@ -213,7 +212,7 @@ if __name__ == "__main__":
                 print([matrices[a].shape for a in matrices])
             except NotImplementedError:
                 logging.warning(f'''Caught exception for {algorithm};
-                continuing wiht the next algorithm and its corresponding
+                continuing with the next algorithm and its corresponding
                 parameter grid.''')
 
                 traceback.print_exc()
@@ -224,11 +223,9 @@ if __name__ == "__main__":
             matrices['y'] = y
             
             # We only save matrices if we are not in timing mode. In
-            # somse sense, the calculations will thus be lost but we
+            # some sense, the calculations will thus be lost, but we
             # should not account for the save time anyway.
             if not args.timing:
-                #if not os.path.exists(filename):
-                #    if not args.force:
                 np.savez(filename, **matrices)
 
         else:
@@ -237,8 +234,6 @@ if __name__ == "__main__":
             # We only save the matrix if we are not in timing mode; see
             # above for the rationale.
             if not args.timing:
-                #if not os.path.exists(filename):
-                #    if not args.force:
                 np.savez(filename, K=K, y=y)
 
         stop_time = time.process_time()
@@ -247,5 +242,3 @@ if __name__ == "__main__":
         # always be replaced easily.
         with open(os.path.join(args.output, f'Time_{algorithm}.txt'), 'w') as f:
             print(stop_time - start_time, file=f)
-
-        
