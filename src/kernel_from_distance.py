@@ -4,6 +4,7 @@ import argparse
 import os
 
 import numpy as np
+from sklearn.model_selection import ParameterGrid
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -42,22 +43,27 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     param_grid = {
-        'rbf': [0.05, 0.07, 0.1, 0.15, 0.2, 0.3, 0.5, 1],  # $\gamma$ = gamma
+        'gamma': np.logspace(-10, 10, 21),
+        'epsilon': np.array([0.002, 0.004, 0.006, 0.008, 0.01, 0.02, 0.04, 0.06, 0.08, 0.1]),
+        # 'epsilon': np.array([0.002, 0.004, 0.006, 0.008, 0.01, 0.06, 0.08, 0.1]),
     }
+    grid = ParameterGrid(param_grid)
 
     matrices = dict()
     for algo in args.algorithm:
-        distances = np.loadtxt(f"{args.DATA}/{algo}.csv")
         y = np.loadtxt(f"{args.DATA}/labels.csv")
 
         if args.kernel == 'rbf':
-            f = lambda gamma: np.exp(-gamma * distances)
+            def f(gamma, epsilon):
+                distances = np.loadtxt(f"{args.DATA}/{algo}-{epsilon}-approx.csv")
+                distances -= np.min(distances)
+                return np.exp(-gamma * distances)
         else:
             raise ValueError(f"The given kernel ´{args.kernel}´ is not supported.")
 
         matrices = {
-            str(param): f(gamma=param)
-            for param in param_grid[args.kernel]
+            '#'.join(map(str, param.values())): f(gamma=param['gamma'], epsilon=param['epsilon'])
+            for param in grid
         }
         matrices['y'] = y
 
