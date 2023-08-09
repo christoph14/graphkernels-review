@@ -94,6 +94,21 @@ if __name__ == '__main__':
         tqdm(args.FILE, desc='File')
     ]
 
+    # Sample graphs
+    dataset = args.output.split('/')[-1]
+    n_graphs = {
+        'BZR': 405,
+        'MUTAG': 188,
+        'PTC_MR': 344,
+        'KKI': 83,
+        'ENZYMES': 300,
+        'PROTEINS': 200,
+        'AIDS': 500,
+    }
+    if n_graphs[dataset] < len(graphs):
+        rng = np.random.default_rng(403371)
+        graphs = rng.choice(graphs, n_graphs[dataset], replace=False)
+
     graphs = [
         preprocess(graph) for graph in tqdm(graphs, desc='Preprocessing')
     ]
