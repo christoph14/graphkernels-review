@@ -116,15 +116,16 @@ if __name__ == '__main__':
     y = np.array([g['label'] for g in graphs])
 
     algorithms = {
+        # Histogram kernels (baselines)
+        'VH': gk.CalculateVertexHistKernel,
         'EH': gk.CalculateEdgeHistKernel,
-        # FIXME: does not yet work
-        # 'CGL': gk.CalculateConnectedGraphletKernel,
+        # Other kernels
         'GL': gk.CalculateGraphletKernel,
         'SP': gk.CalculateShortestPathKernel,
-        'VEH': gk.CalculateVertexEdgeHistKernel,
-        'VVEH': gk.CalculateVertexVertexEdgeHistKernel,
-        'VH': gk.CalculateVertexHistKernel,
+        'RW': gk.CalculateExponentialRandomWalkKernel,
         'WL': gk.CalculateWLKernel,
+        # 'VEH': gk.CalculateVertexEdgeHistKernel,
+        # 'VVEH': gk.CalculateVertexVertexEdgeHistKernel,
     }
 
     param_grid = {
@@ -179,7 +180,7 @@ its corresponding parameter grid.
             matrices['y'] = y
 
             # We only save matrices if we are not in timing mode. In
-            # somse sense, the calculations will thus be lost but we
+            # some sense, the calculations will thus be lost, but we
             # should not account for the save time anyway.
             if not args.timing:
                 np.savez(filename, **matrices)
@@ -198,4 +199,3 @@ its corresponding parameter grid.
         # always be replaced easily.
         with open(os.path.join(args.output, f'Time_{algorithm}.txt'), 'w') as f:
             print(stop_time - start_time, file=f)
-
