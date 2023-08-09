@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-print(__doc__)
+# print(__doc__)
 
 import numpy as np
 from tqdm import tqdm
