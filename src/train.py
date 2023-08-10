@@ -48,7 +48,8 @@ def normalize(matrix):
     # Ensures that only non-zero entries will be subjected to the
     # normalisation procedure. The remaining entries will be kept
     # at zero. This prevents 'NaN' values from cropping up.
-    mask = np.diagonal(matrix) != 0
+    epsilon = 1e-20  # Use small epsilon instead of 0 to prevent overflow
+    mask = np.diagonal(matrix) > epsilon
     n = len(np.diagonal(matrix))
     k = np.zeros((n, ))
     k[mask] = 1.0 / np.sqrt(np.diagonal(matrix)[mask])
