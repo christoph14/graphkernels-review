@@ -227,7 +227,9 @@ def train_and_test(
     # Refit the classifier on the test data set; using the kernel matrix
     # that performed best in the hyperparameter search.
     K_train = K[train_indices][:, train_indices]
-    clf.fit(K_train, y[train_indices])
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=ConvergenceWarning)
+        clf.fit(K_train, y[train_indices])
 
     y_test = y[test_indices]
     K_test = K[test_indices][:, train_indices]
@@ -242,7 +244,7 @@ def train_and_test(
     n_classes = len(classes)
 
     # Score-based measures; in the multi-class setting, they are not
-    # available so we have to solve this manually.
+    # available, so we have to solve this manually.
     if n_classes == 2:
         auroc = roc_auc_score(y_test, y_score[:, 1])
         auprc = average_precision_score(y_test, y_score[:, 1])
