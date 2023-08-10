@@ -6,6 +6,23 @@ import os
 import numpy as np
 from sklearn.model_selection import ParameterGrid
 
+
+def check_distance_matrix(distances, log=False):
+    # Check distance matrix, TODO remove after integration in main repo
+    n_errors = np.count_nonzero(np.isnan(distances) | np.isinf(distances))
+    if n_errors > 0:
+        if log: print(f'Warning: {n_errors} NaNs/infs in distance matrix.')
+        if (np.isnan(distances) | np.isinf(distances)).all():
+            return np.ones_like(distances)
+    distances = np.nan_to_num(distances, nan=np.nanmax(distances))
+
+    # Ensure that the distance matrix is non-negative
+    if np.min(distances) < 0:
+        if log: print(f'Warning: negative values in distance matrix.')
+        distances -= np.min(distances)
+    return distances
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('DATA', type=str, help='Input file')
@@ -56,7 +73,7 @@ if __name__ == '__main__':
         if args.kernel == 'rbf':
             def f(gamma, epsilon):
                 distances = np.loadtxt(f"{args.DATA}/{algo}-{epsilon}-approx.csv")
-                distances -= np.min(distances)
+                distances = check_distance_matrix(distances, log=False)
                 return np.exp(-gamma * distances)
         else:
             raise ValueError(f"The given kernel ´{args.kernel}´ is not supported.")
