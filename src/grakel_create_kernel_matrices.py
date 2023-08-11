@@ -110,7 +110,11 @@ if __name__ == "__main__":
             default=False,
             help='If specified, only stores timing information'
         )
-
+    parser.add_argument(
+        '--same_size',
+        action='store_const', const=True, default=False,
+        help='todo'
+    )
     args = parser.parse_args()
     input_files = [f"{path}/{file}" for file in os.listdir(args.FILE) if file.endswith('.pickle')]
 
@@ -134,6 +138,12 @@ if __name__ == "__main__":
     }
 
     graphs = [ig.read(filename, format='picklez') for filename in tqdm(input_files, desc='File')]
+
+    if args.same_size:
+        values, counts = np.unique([len(G.vs) for G in graphs], return_counts=True)
+        n_nodes = values[np.argmax(counts)]
+        graphs = [G for G in graphs if len(G.vs) == n_nodes]
+        print(f"Use only graphs of size {n_nodes}")
 
     # Sample graphs
     dataset = args.output.split('/')[-1]

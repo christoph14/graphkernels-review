@@ -72,6 +72,11 @@ if __name__ == '__main__':
         default=False,
         help='If specified, only stores timing information'
     )
+    parser.add_argument(
+        '--same_size',
+        action='store_const', const=True, default=False,
+        help='todo'
+    )
 
     args = parser.parse_args()
 
@@ -93,6 +98,12 @@ if __name__ == '__main__':
         ig.read(filename, format='picklez') for filename in
         tqdm(args.FILE, desc='File')
     ]
+
+    if args.same_size:
+        values, counts = np.unique([len(G.vs) for G in graphs], return_counts=True)
+        n_nodes = values[np.argmax(counts)]
+        graphs = [G for G in graphs if len(G.vs) == n_nodes]
+        print(f"Use only graphs of size {n_nodes}")
 
     # Sample graphs
     dataset = args.output.split('/')[-1]
