@@ -120,7 +120,7 @@ if __name__ == "__main__":
         help='todo'
     )
     args = parser.parse_args()
-    input_files = [f"{path}/{file}" for file in os.listdir(args.FILE) if file.endswith('.pickle')]
+    input_files = [f"{args.FILE}/{file}" for file in os.listdir(args.FILE) if file.endswith('.pickle')]
 
     logging.basicConfig(level=logging.INFO, format=None)
 
