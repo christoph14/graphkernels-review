@@ -14,6 +14,7 @@ import sys
 import traceback
 
 import grakel
+from grakel import GraphletSampling
 from grakel.kernels import ShortestPath, WeisfeilerLehman, VertexHistogram
 from grakel.kernels import EdgeHistogram, RandomWalkLabeled, GraphHopper
 import igraph as ig
@@ -70,7 +71,10 @@ def gk_function(algorithm, graphs, par):
                 k=k, 
                 ke=lambda p1, p2: ke_kernel(p1, p2, c), # inline lambda 
                 kv=kv_kernel
-                ).fit_transform(graphs) 
+                ).fit_transform(graphs)
+    elif algorithm == "GL_gkl":
+        k = par
+        gk = GraphletSampling(k=k).fit_transform(graphs)
     elif algorithm == "GH_gkl":
         gk = GraphHopper().fit_transform(graphs)
     return(gk)
@@ -135,6 +139,7 @@ if __name__ == "__main__":
         "WL_gkl": {"vertex": "label", "edge": []},
         "CSM_gkl": {"vertex": "both", "edge": "both"},
         "GH_gkl": {"vertex": [], "edge": []},  # TODO fix
+        'GL_gkl': {'vertex': [], 'edge': []},
     }
 
     graphs = [ig.read(filename, format='picklez') for filename in tqdm(input_files, desc='File')]
@@ -155,6 +160,8 @@ if __name__ == "__main__":
         'ENZYMES': 300,
         'PROTEINS': 200,
         'AIDS': 500,
+        'FRANKENSTEIN': 500,
+        'DHFR': 500,
     }
     if n_graphs[dataset] < len(graphs):
         rng = np.random.default_rng(403371)
@@ -172,6 +179,7 @@ if __name__ == "__main__":
 
     param_grid = {
         "SP_gkl": [1],
+        "GL_gkl": [3, 4, 5],
         "WL_gkl": [1, 2, 3, 4, 5, 6, 7],  # 0 returns an error
         "RW_gkl":  [(l, p) for l in [0.001] for p in [2, 3, 4, 5, 6, 7, None]],
         "CSM_gkl": [(c, k) for c in [0.1, 0.5, 1.0] for k in [3, 4, 5]],
@@ -185,6 +193,7 @@ if __name__ == "__main__":
         "CSM_gkl": "Notused",  # legacy item, I need a value
         "MP_gkl": "Not used",
         "GH_gkl": "Not used",
+        "GL_gkl": "Not used",
     }
 
     # Remove algorithms that have not been specified by the user; this
