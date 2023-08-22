@@ -7,11 +7,11 @@
 import argparse
 import collections
 import json
-import tabulate
+import os
 
 import numpy as np
 import pandas as pd
-
+import tabulate
 from tqdm import tqdm
 
 
@@ -119,7 +119,7 @@ def format_cell(x):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('FILE', nargs='+', help='Input file')
+    parser.add_argument('FILE', help='Input file')
     parser.add_argument(
         '-m', '--measure',
         default='accuracy',
@@ -131,10 +131,12 @@ if __name__ == '__main__':
 
     df = None
 
+    input_files = [f"{args.FILE}/{file}" for file in os.listdir(args.FILE) if file.endswith('.json')]
+
     # We collate *all* of the files instead of using single one. This
     # gives us more flexibility. In theory, this should also work for
     # files in which multiple measurements are present.
-    for filename in tqdm(args.FILE, desc='File'):
+    for filename in tqdm(input_files, desc='File'):
 
         with open(filename) as f:
             data = json.load(f)
@@ -152,6 +154,7 @@ if __name__ == '__main__':
 
         # Replace everything that is not a mean
         df_local[name] = [f'{m:2.2f} +- {s:2.2f}' for (m, s) in zip(mean.values, std.values)]
+        df_local[name] = [f'{m:2.2f}' for (m, s) in zip(mean.values, std.values)]
         df_local = df_local[[name]]
 
         if df is None:
@@ -161,7 +164,14 @@ if __name__ == '__main__':
 
     print(
       tabulate.tabulate(
-        df.transpose(),
+        df,
+        tablefmt='github',
+        headers='keys',
+      )
+    )
+    print(
+      tabulate.tabulate(
+        df.rank(axis=0, ascending=False),
         tablefmt='github',
         headers='keys',
       )
@@ -178,36 +188,16 @@ if __name__ == '__main__':
     df_vectorised.to_csv(f'./evaluation/{args.measure}.csv')
 
     df = df.applymap(format_cell)
-    
 
-    # print EH and VH
-    hvev = df.transpose()[['VH', 'EH_gkl']]
-    print(
-            tabulate.tabulate(
-                hvev,
-                tablefmt='plain',
-                headers='keys'
-                )
-            )
-    
-    # print remaining kernels
-    full_results = df.transpose()[[
-        "CSM_gkl", "GH", "GL", "HGKSP_seed0", "HGKWL_seed0", "MLG", "MP",
-        "SP_gkl", "RW_gkl", "WL", "WLOA"
-        ]]
-
-    print(
-      tabulate.tabulate(
-        full_results,
-        tablefmt='plain',
-        headers='keys',
-      )
+    df.drop(index=['GL'], inplace=True)
+    df.rename(
+        index={x: x.replace('_gkl', '').replace('-got', ' $g(L)=L^\\dagger$').replace('-sq', ' $g(L)=L^2$') for x in df.index},
+        columns={x: f'\\{x.lower()}' for x in df.columns},
+        inplace=True
     )
+    style = df.style
+    print(style.to_latex(hrules=True))
 
-    #print(
-    #  tabulate.tabulate(
-    #    df.transpose(),
-    #    tablefmt='plain',
-    #    headers='keys',
-    #  )
-    #)
+    ranks = df.rank(axis=0, ascending=False, method='min')
+    ranks['MEAN'] = np.nanmean(ranks, axis=1)
+    print(ranks.style.format(precision=2).to_latex(hrules=True))
