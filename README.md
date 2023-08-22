@@ -17,9 +17,16 @@ folder. We used `poetry` to manage the dependencies, which can be
 installed by running `poetry install` in the terminal (assuming `poetry`
 is already installed). 
 
+## Preparing data set
+
+  Unzip MUTAG.zip from TUDataset to the `.` directory and run
+
+    ./src/convert_to_igraph.py -o ./data/MUTAG MUTAG
+
 ## Generating kernel matrices
 
-    ./src/create_kernel_matrices.py -o ./matrices/MUTAG ./data/MUTAG/*.pickle
+    ./src/create_kernel_matrices.py -o ./matrices/MUTAG ./data/MUTAG/*.pickle -a ALGOS
+    ./src/kernel_from_distance.py -o ./matrices/MUTAG ./distances/MUTAG -a fGOT-got
 
 ## Training a classifier on a set of kernel matrices
 
